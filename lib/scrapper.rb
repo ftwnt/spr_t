@@ -1,5 +1,7 @@
 require 'mechanize'
 require 'watir'
+require 'redis'
+
 require './lib/item_parser'
 
 class Scrapper
@@ -15,18 +17,37 @@ class Scrapper
   end
 
   def perform
-    scrapped_url = more_records_available? ? url : multiple_pages_url_for(url: url)
-    content = parsed_content_for(url: scrapped_url)
-    items = content.search('.goods-tile')
+    restore_or_cache do
+      scrapped_url = more_records_available? ? url : multiple_pages_url_for(url: url)
+      content = parsed_content_for(url: scrapped_url)
+      items = content.search('.goods-tile')
 
-    return 'Nothing has been found' if items.empty?
+      return 'Nothing has been found' if items.empty?
 
-    items.map do |item|
-      ItemParser.new(item: item).process
+      items.map do |item|
+        ItemParser.new(item: item).process
+      end
     end
   end
 
-  # private
+  def retrieve_and_uncache_results
+    stored = retrieve_cached
+
+    return unless stored
+
+    result = Marshal.load stored
+    result = result.select { |item| item[:availability] && item[:reviews_count] >= 1 }
+                   .sort_by { |item| [item[:reviews_count], item[:price]] }.reverse!
+
+    puts 'URL Price Reviews Name'
+    result.each do |item|
+      puts [item[:url], item[:price], item[:reviews_count], item[:title]].join(' ')
+    end
+
+    store.del(cached_key)
+  end
+
+  private
 
   def parsed_content_for(url:)
     Mechanize::Page.new(nil,
@@ -62,5 +83,29 @@ class Scrapper
 
   def js_page_preloader
     @js_page_preloader ||= Watir::Browser.new :chrome, headless: true
+  end
+
+  def store
+    @store = Redis.new
+  end
+
+  def restore_or_cache
+    cached_result = retrieve_cached
+
+    if cached_result
+      Marshal.load cached_result
+    else
+      scrapped_data = yield
+      store.set(cached_key, Marshal.dump(scrapped_data))
+    end
+  end
+
+  def retrieve_cached
+    url_store_key = cached_key
+    store.get(url_store_key)
+  end
+
+  def cached_key
+    "rozetka::#{url}"
   end
 end
