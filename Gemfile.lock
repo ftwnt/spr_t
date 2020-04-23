@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    childprocess (3.0.0)
     connection_pool (2.2.2)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -25,9 +26,17 @@ GEM
     nokogiri (1.10.9)
       mini_portile2 (~> 2.4.0)
     ntlm-http (0.1.1)
+    regexp_parser (1.7.0)
+    rubyzip (2.3.0)
+    selenium-webdriver (3.142.7)
+      childprocess (>= 0.5, < 4.0)
+      rubyzip (>= 1.2.2)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.7)
+    watir (6.16.5)
+      regexp_parser (~> 1.2)
+      selenium-webdriver (~> 3.6)
     webrobots (0.1.2)
 
 PLATFORMS
@@ -35,6 +44,7 @@ PLATFORMS
 
 DEPENDENCIES
   mechanize!
+  watir!
 
 BUNDLED WITH
    1.17.3
