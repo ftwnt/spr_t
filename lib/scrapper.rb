@@ -22,25 +22,24 @@ class Scrapper
       content = parsed_content_for(url: scrapped_url)
       items = content.search('.goods-tile')
 
-      return 'Nothing has been found' if items.empty?
-
-      items.map do |item|
-        ItemParser.new(item: item).process
+      if items.empty?
+        'Nothing has been found'
+      else
+        items.map { |item| ItemParser.new(item: item).process }
       end
     end
   end
 
   def retrieve_and_uncache_results
-    stored = retrieve_cached
-
-    return unless stored
+    return unless (stored = retrieve_cached)
 
     result = Marshal.load stored
-    result = result.select { |item| item[:availability] && item[:reviews_count] >= 1 }
-                   .sort_by { |item| [item[:reviews_count], item[:price]] }.reverse!
+
+    return result if result.is_a? String
 
     puts 'URL Price Reviews Name'
-    result.each do |item|
+
+    prepare_for_output(results: result).each do |item|
       puts [item[:url], item[:price], item[:reviews_count], item[:title]].join(' ')
     end
 
@@ -107,5 +106,10 @@ class Scrapper
 
   def cached_key
     "rozetka::#{url}"
+  end
+
+  def prepare_for_output(results:)
+    results.select { |item| item[:availability] && item[:reviews_count] >= 1 }
+           .sort_by { |item| [item[:reviews_count], item[:price]] }.reverse!
   end
 end
