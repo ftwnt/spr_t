@@ -22,3 +22,9 @@ url defined for scrapping in the object.
 the retrieved data in ***URL Price Comments Name*** format row by row.
 3. Returns nothing if `redis` key not found.
 4. Removes the key from the store after successful output.
+
+### Execution
+
+Run the bin script with desired url for scrapping, e.g.:
+
+`bin/run "https://rozetka.com.ua/mobile-phones/c80003/preset\=smartfon/"` 

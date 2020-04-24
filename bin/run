@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require './lib/scrapper'
+
+scrapper = Scrapper.new(url: ARGV[0])
+scrapper.perform
+scrapper.retrieve_and_uncache_results

@@ -72,7 +72,7 @@ class Scrapper
 
     return url.gsub("page=#{Regexp.last_match(:pages)}", 'page=1-2') if pages_param
 
-    url.chop! if url =~ /^.+\/$/
+    url = url.chop if url =~ /^.+\/$/
     url + FIRST_MULTIPLE_PAGES_PARAM
   end
 
