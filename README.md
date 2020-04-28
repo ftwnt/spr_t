@@ -28,3 +28,12 @@ the retrieved data in ***URL Price Comments Name*** format row by row.
 Run the bin script with desired url for scrapping, e.g.:
 
 `bin/run "https://rozetka.com.ua/mobile-phones/c80003/preset\=smartfon/"` 
+
+
+### Links for testing
+
+| Type | Link |
+| --- | --- |
+| No goods | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=cat;38435=12-gb/ |
+| Goods on 1 page | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=htc/ |
+| Goods on multiple pages | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon/ |
