@@ -2,32 +2,34 @@ require 'mechanize'
 require 'watir'
 require 'redis'
 
+require './lib/api_url_extractor'
 require './lib/item_parser'
 
 class Scrapper
-  MORE_RECORDS_LINK_PATTERN = /^Показать ещё/.freeze
   MULTIPLE_PAGES_URI_PATTERN = /page=(?<pages>\d-\d)/.freeze
-  SLASHED_URL_PATTERN = /^.+\/$/.freeze
   FIRST_MULTIPLE_PAGES_PARAM = ';page=1-2'.freeze
 
-  attr_reader :url
+  attr_reader :url, :agent, :store
 
   def initialize(url:)
     @url = url
+    @agent = Mechanize.new
+    @store = Redis.new
   end
 
   def perform
-    restore_or_cache do
-      scrapped_url = more_records_available? ? url : multiple_pages_url_for(url: url)
-      content = parsed_content_for(url: scrapped_url)
-      items = content.search('.goods-tile')
-
-      if items.empty?
-        'Nothing has been found'
-      else
-        items.map { |item| ItemParser.new(item: item).process }
-      end
-    end
+    puts goods_retrieval_url
+    # restore_or_cache do
+    #   scrapped_url = more_records_available? ? url : multiple_pages_url_for(url: url)
+    #   content = parsed_content_for(url: scrapped_url)
+    #   items = content.search('.goods-tile')
+    #
+    #   if items.empty?
+    #     'Nothing has been found'
+    #   else
+    #     items.map { |item| ItemParser.new(item: item).process }
+    #   end
+    # end
   end
 
   def retrieve_and_uncache_results
@@ -48,24 +50,26 @@ class Scrapper
 
   private
 
-  def parsed_content_for(url:)
-    Mechanize::Page.new(nil,
-                        { 'content-type' => 'text/html' },
-                        preloaded_js_content_for(url: url),
-                        nil,
-                        agent)
+  def page_content
+    @page_content = agent.get(url)
   end
 
-  def preloaded_js_content_for(url:)
-    js_page_preloader.goto(url)
-    js_page_preloader.element(css: '.js_content')
-                     .wait_until(&:present?)
-                     .html
+  def api_related_urls
+    page_content.search('#rz-client-state').text
   end
 
-  def more_records_available?
-    parsed_content_for(url: url).link_with(text: MORE_RECORDS_LINK_PATTERN)
+  def goods_retrieval_url
+    @goods_retrieval_url = ApiUrlExtractor.new(api_related_urls).perform
   end
+  # def data_content
+  #   unless data_items
+  #     related_link = page_content.link_at(href: /#{request_related_uri}/)
+  #     raise Mechanize::ElementNotFoundError unless related_link
+  #     related_link.click
+  #   end
+  #
+  #   data_items
+  # end
 
   def multiple_pages_url_for(url:)
     pages_param = url =~ MULTIPLE_PAGES_URI_PATTERN
@@ -74,18 +78,6 @@ class Scrapper
 
     url = url.chop if url =~ /^.+\/$/
     url + FIRST_MULTIPLE_PAGES_PARAM
-  end
-
-  def agent
-    @agent ||= Mechanize.new
-  end
-
-  def js_page_preloader
-    @js_page_preloader ||= Watir::Browser.new :chrome, headless: true
-  end
-
-  def store
-    @store = Redis.new
   end
 
   def restore_or_cache
