@@ -1,5 +1,4 @@
 require 'mechanize'
-require 'watir'
 require 'redis'
 
 require './lib/service_api/goods_retriever'

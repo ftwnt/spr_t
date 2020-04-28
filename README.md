@@ -3,7 +3,6 @@
 ### Dependencies
 
 * [redis](https://redis.io/)
-* [chromedriver](https://github.com/SeleniumHQ/selenium/wiki/ChromeDriver)
 
 ### Description
 

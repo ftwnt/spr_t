@@ -3,5 +3,4 @@ source 'https://rubygems.org' do
 
   # Web page parsing tools
   gem 'mechanize'
-  gem 'watir'
 end
