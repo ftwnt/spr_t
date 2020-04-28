@@ -8,12 +8,13 @@
 ### Description
 
 #### `Scrapper#perform` 
-1. Crawls through the first two pages for the provided url 
-(even if there are more pages defined in the filter params), 
-2. Retrieves URL, title, price, reviews amount and stock availability for all the items from list.
+1. Fetches `rozetka` page.
+2. Retrieves encoded script for dynamically retrieved data.
+3. Decodes needed endpoints to fetch data and calls it. 
+4. Retrieves URL, title, price, reviews amount and stock availability for all the items from list.
 If no results -- the `'Nothing has been found'` message is used.
-3. The data is serialized and placed to `redis`.
-4. `redis` keeps data until `Scrapper#retrieve_and_uncache_results` is successfully executed.
+5. The data is serialized and placed to `redis`.
+6. `redis` keeps data until `Scrapper#retrieve_and_uncache_results` is successfully executed.
 
 #### `Scrapper#retrieve_and_uncache_results`
 1. Retrieves data from `redis` by a key with pattern `rozetka::GIVEN_URL`, where `GIVEN_URL` is
