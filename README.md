@@ -34,6 +34,6 @@ Run the bin script with desired url for scrapping, e.g.:
 
 | Type | Link |
 | --- | --- |
-| No goods | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=cat;38435=12-gb/ |
-| Goods on 1 page | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=htc/ |
+| No goods | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=sony;49180=103100/ |
+| Goods on 1 page | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon;producer=apple/ |
 | Goods on multiple pages | https://rozetka.com.ua/mobile-phones/c80003/preset=smartfon/ |

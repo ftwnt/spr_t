@@ -2,13 +2,11 @@ require 'mechanize'
 require 'watir'
 require 'redis'
 
-require './lib/api_url_extractor'
+require './lib/service_api/goods_retriever'
+require './lib/service_api/url_extractor'
 require './lib/item_parser'
 
 class Scrapper
-  MULTIPLE_PAGES_URI_PATTERN = /page=(?<pages>\d-\d)/.freeze
-  FIRST_MULTIPLE_PAGES_PARAM = ';page=1-2'.freeze
-
   attr_reader :url, :agent, :store
 
   def initialize(url:)
@@ -18,18 +16,13 @@ class Scrapper
   end
 
   def perform
-    puts goods_retrieval_url
-    # restore_or_cache do
-    #   scrapped_url = more_records_available? ? url : multiple_pages_url_for(url: url)
-    #   content = parsed_content_for(url: scrapped_url)
-    #   items = content.search('.goods-tile')
-    #
-    #   if items.empty?
-    #     'Nothing has been found'
-    #   else
-    #     items.map { |item| ItemParser.new(item: item).process }
-    #   end
-    # end
+    restore_or_cache do
+      if retrieved_goods.empty?
+        'Nothing has been found'
+      else
+        retrieved_goods.map { |item| ItemParser.new(item: item).process }
+      end
+    end
   end
 
   def retrieve_and_uncache_results
@@ -37,13 +30,7 @@ class Scrapper
 
     result = Marshal.load stored
 
-    return result if result.is_a? String
-
-    puts 'URL Price Reviews Name'
-
-    prepare_for_output(results: result).each do |item|
-      puts [item[:url], item[:price], item[:reviews_count], item[:title]].join(' ')
-    end
+    print_results(result: result)
 
     store.del(cached_key)
   end
@@ -59,25 +46,11 @@ class Scrapper
   end
 
   def goods_retrieval_url
-    @goods_retrieval_url = ApiUrlExtractor.new(api_related_urls).perform
+    @goods_retrieval_url = ServiceApi::UrlExtractor.new(encoded_content: api_related_urls).perform
   end
-  # def data_content
-  #   unless data_items
-  #     related_link = page_content.link_at(href: /#{request_related_uri}/)
-  #     raise Mechanize::ElementNotFoundError unless related_link
-  #     related_link.click
-  #   end
-  #
-  #   data_items
-  # end
 
-  def multiple_pages_url_for(url:)
-    pages_param = url =~ MULTIPLE_PAGES_URI_PATTERN
-
-    return url.gsub("page=#{Regexp.last_match(:pages)}", 'page=1-2') if pages_param
-
-    url = url.chop if url =~ /^.+\/$/
-    url + FIRST_MULTIPLE_PAGES_PARAM
+  def retrieved_goods
+    @retrieved_goods ||= ServiceApi::GoodsRetriever.new(url: goods_retrieval_url).perform
   end
 
   def restore_or_cache
@@ -103,5 +76,21 @@ class Scrapper
   def prepare_for_output(results:)
     results.select { |item| item[:availability] && item[:reviews_count] >= 1 }
            .sort_by { |item| [item[:reviews_count], item[:price]] }.reverse!
+  end
+
+  def print_results(result:)
+    if result.is_a? String
+      puts(result)
+      return
+    end
+
+    filtered_results = prepare_for_output(results: result)
+
+    return if filtered_results.empty?
+
+    puts 'URL Price Reviews Name'
+    filtered_results.each do |item|
+      puts [item[:url], item[:price], item[:reviews_count], item[:title]].join(' ')
+    end
   end
 end

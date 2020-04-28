@@ -1,8 +1,5 @@
 class ItemParser
-  AVAILABILITY_CSS_MARKS = %w[
-    .goods-tile__availability_type_available
-    goods-tile__availability_type_limited
-  ].freeze
+  AVAILABILITY_STATUSES = %w[available limited].freeze
 
   attr_reader :item
 
@@ -23,32 +20,22 @@ class ItemParser
   private
 
   def url
-    item_heading.first[:href]
+    item[:href]
   end
 
   def title
-    item_heading.first[:title]
+    item[:title]
   end
 
   def price
-    item.search('.goods-tile__price-value')
-        .first
-        &.text
-        &.gsub(/\s/, '')
-        &.to_i
+    item[:price]
   end
 
   def reviews
-    item.search('.goods-tile__rating .goods-tile__reviews-link')
-        .text
-        .to_i
+    item[:comments_amount]
   end
 
   def availability
-    !item.search(AVAILABILITY_CSS_MARKS.join(', ')).empty?
-  end
-
-  def item_heading
-    item.search('.goods-tile__heading')
+    AVAILABILITY_STATUSES.include? item[:sell_status]
   end
 end
